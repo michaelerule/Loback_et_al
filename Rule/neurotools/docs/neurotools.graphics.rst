@@ -17,6 +17,6 @@ Module contents
 ---------------
 
 .. automodule:: neurotools.graphics
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
