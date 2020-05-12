@@ -1,2 +1,6 @@
-# Loback_et_al
-Source code files for Loback et al. 2019
+# Stable Task Information from an Unstable Neural Population
+
+Source code files for "Stable Task Information from an Unstable Neural Population"
+
+
+
