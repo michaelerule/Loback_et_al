@@ -9,7 +9,10 @@ git add -u
 
 # Commit using the message specified as first argument to this script
 echo "Git commit"
-git commit -m "..."
+
+
+MSG=${1:-no_message}  
+git commit -m "$MSG"
 
 # Synchronize with master on github
 echo "git pull"
