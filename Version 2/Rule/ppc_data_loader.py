@@ -8,44 +8,37 @@ from __future__ import generators
 from __future__ import unicode_literals
 from __future__ import print_function
 
-from neurotools.nlab import *
 import os,sys,traceback,h5py
-# helper functions for reading the HDF5 Matlab format
-from neurotools.hdfmat import printmatHDF5, hdf2dict, getHDF
-#import sklearn
-from sklearn.decomposition import FactorAnalysis
-# Linear system solvers (exact vs. least-squares)
-from scipy.linalg import solve,lstsq
+
+# Get numpy, matplotlib
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-from sklearn  import manifold
+from scipy.linalg import solve,lstsq
+
+# Initialize the neurotools cache in the main notebook before importing ppc_data_loader
+from neurotools.nlab import *
+from neurotools.hdfmat import printmatHDF5, hdf2dict, getHDF
+from neurotools.tools  import find # override depricated matplotlib find function
+memoize = neurotools.jobs.ndecorator.memoize
+import neurotools.signal
+
 from ppc_util import *
 import ppc_trial
 
+# Not sure we need these imports anymore
+from sklearn.decomposition import FactorAnalysis
+from sklearn  import manifold
 
-import platform
-HOSTNAME   = platform.uname().node
-DATAPATH = {'petra'  :'/data/PPC_data/',
-            'pichu'  :'/home/mer49/Dropbox (Cambridge University)/Datasets/PPC_data/',
-            'palmyra':'/home/mer49/Workspace2/PPC_data/'}[HOSTNAME]
-DATAPATH = os.path.expanduser(DATAPATH)
-ensure_dir(DATAPATH)
-path = DATAPATH
-
+path = "... !! Please assign the location of the Ca2+ imaging datasets to the ppc_data_loader.path variable"
 print('Data location is',path)
-#print('Cache location is',CACHEDIR)
-
-#import functools
-#memoize = functools.lru_cache(maxsize=None)
-memoize = neurotools.jobs.ndecorator.memoize
-
-# override depricated matplotlib find function
-from  neurotools.tools import find
 
 def release_files(clear_cache=False):
     '''
-    Ad-hoc way to deal with poor memory management
+    Clears the memoization caches in RAM and hunts down
+    any files that were accidentally left open. Useful on machines
+    with limited RAM, and to tidy up the memory when doing e
+    extensive processing.
     
     Other Parameters
     ----------------
@@ -68,6 +61,10 @@ def release_files(clear_cache=False):
 
 def get_file(animal,session):
     '''
+    Converts animal ID and session ID into
+    the file-name format 'm%02d_s%02d.mat' in
+    LND's datasets
+    
     Parameters
     ----------
     animal : int
@@ -77,11 +74,19 @@ def get_file(animal,session):
         
     Returns
     -------
+    filename: string
     '''
     return 'm%02d_s%02d.mat'%(animal,session)
 
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
 def get_data(animal,session):
     '''
+    Returns an `h5py.File` instance for  the given animal and session. This
+    looks for the data in the `ppc_data_loader.path` variable, so this should
+    be initialized to point to the data on your local machine. It also assumes
+    that the given animal and session file exists, and will raise a FileError if
+    not. 
+    
     Parameters
     ----------
     animal : int
@@ -91,12 +96,14 @@ def get_data(animal,session):
         
     Returns
     -------
+    datafile: `h5py.File` instance
     '''
     return h5py.File(path+get_file(animal,session), 'r')
 
-#@memoize
 def get_FS(animal,session):
     '''
+    Get the sampling rate for the given (animal,session) in Hz
+    
     Parameters
     ----------
     animal : int
@@ -106,17 +113,18 @@ def get_FS(animal,session):
         
     Returns
     -------
+    FS: float, sampling rate in Hz
     '''
     hdfdata = get_data(animal,session)
     FS = getHDF(hdfdata,'session_obj/timeSeries/frameRate') # Hz
-    #hdfdata.close()
-    #print('Sample rate is %f Hz'%FS)
     hdfdata.close()
     return FS
 
-#@memoize
 def get_duration(animal,session):
     '''
+    Get the duration of the recording (in samples) of the given
+    animal and session. 
+    
     Parameters
     ----------
     animal : int
@@ -126,10 +134,10 @@ def get_duration(animal,session):
         
     Returns
     -------
+    int: number of samples in this recording
     '''
     return get_nonneural(animal,session).shape[0]
 
-#@memoize
 def get_nonneural(animal,session):
     '''
     Get the non-neural timeseries (kinematics, mostly)
@@ -143,13 +151,13 @@ def get_nonneural(animal,session):
         
     Returns
     -------
+    np.array: array of non-neural timeseries from this dataset
     '''
     hdfdata = get_data(animal,session)
-    result = getHDF(hdfdata,'session_obj/timeSeries/virmen/data')
+    result  = getHDF(hdfdata,'session_obj/timeSeries/virmen/data')
     hdfdata.close()
     return result
 
-#@memoize
 def get_stability_index(animal,session):
     '''
     Stability index computed/provided by Laura
@@ -170,34 +178,6 @@ def get_stability_index(animal,session):
     labels = np.int32(labels)
     hdfdata.close()
     return labels
-
-#@memoize
-def get_confidence(animal,session):
-    '''
-    This uses the recorded confidence lable in the dataset
-    This *should* agree with which neurons actually have
-    data within a given session. (check this)
-
-    Parameters
-    ----------
-    animal : int
-        Which subject ID to use
-    session : int
-        Which session ID to use
-        
-    Returns
-    -------
-    '''
-    raise NotImplementedError("""The `get_confidence` function has been 
-depricated, since it incorrectly used stability labels as a proxy for unit 
-quality. Use the `good_units` and `good_units_index` functions instead.""") 
-
-    hdfdata = get_data(animal,session)
-    labels = getHDF(hdfdata,'session_obj/confidenceLabel')
-    #hdfdata.close()
-    labels[~isfinite(labels)] = 0
-    hdfdata.close()
-    return np.int32(labels)
 
 @memoize
 def get_recording_stability_index(animal,session):
@@ -223,61 +203,6 @@ def get_recording_stability_index(animal,session):
     hdfdata.close()
     return np.int32(labels)
 
-@memoize
-def get_good_units(animal,session):
-    '''
-    This uses the recorded confidence lable in the dataset
-    This *should* agree with which neurons actually have
-    data within a given session. (check this)
-    
-    Note! This is not a confidence label, but rather
-    a 'stability' label. 
-    
-    Parameters
-    ----------
-    animal : int
-        Which subject ID to use
-    session : int
-        Which session ID to use
-        
-    Returns
-    -------
-    '''
-    raise NotImplementedError("""The `get_good_units` function has been 
-depricated, since it incorrectly used stability labels as a proxy for unit 
-quality. Use the `good_units` and `good_units_index` functions instead.""") 
-    
-    hdfdata = get_data(animal,session)
-    labels  = getHDF(hdfdata,'session_obj/confidenceLabel')
-    #hdfdata.close()
-    labels  = np.int32(labels)
-    hdfdata.close()
-    return np.where(np.isfinite(labels) & (labels>1))[0]
-
-@memoize
-def get_number_confident_units(animal,session):
-    '''
-    This uses the recorded confidence lable in the dataset
-    This *should* agree with which neurons actually have
-    data within a given session. (check this)
-
-    Parameters
-    ----------
-    animal : int
-        Which subject ID to use
-    session : int
-        Which session ID to use
-        
-    Returns
-    -------
-    '''
-    raise NotImplementedError("""The `get_number_confident_units` function 
-has been depricated, since it incorrectly used stability labels as a proxy 
-for unit quality. Use the `good_units` and `good_units_index` functions 
-instead.""") 
-    return sum(get_confidence(animal,session)>1)
-
-#@memoize
 def get_timestamp(animal,session):
     '''
     Parameters
@@ -293,7 +218,6 @@ def get_timestamp(animal,session):
     nonneural = get_nonneural(animal,session)
     return nonneural.T[0]
 
-#@memoize
 def get_x(animal,session):
     '''
     x location in virtual maze
@@ -312,7 +236,6 @@ def get_x(animal,session):
     nonneural = get_nonneural(animal,session)
     return nonneural.T[1]
 
-#@memoize
 def get_kinematics(animal,session):
     '''
     Parameters
@@ -329,7 +252,6 @@ def get_kinematics(animal,session):
     nonneural = get_nonneural(animal,session)
     return nonneural.T[1:6]
 
-#@memoize
 def get_y(animal,session):
     '''
     y location in virtual maze
@@ -348,7 +270,6 @@ def get_y(animal,session):
     nonneural = get_nonneural(animal,session)
     return nonneural.T[2]
 
-#@memoize
 def get_theta(animal,session):
     '''
     Get head-direction view angle. Units are in degrees. 
@@ -369,7 +290,6 @@ def get_theta(animal,session):
     nonneural = get_nonneural(animal,session)
     return (nonneural.T[3]+180)%360-180
 
-#@memoize
 def get_theta_radians(animal,session):
     '''
     Head direction in radians
@@ -386,9 +306,9 @@ def get_theta_radians(animal,session):
     '''
     return (get_theta(animal,session)*np.pi/180+3*pi)%(2*pi)-pi
 
-#@memoize
 def get_dx(animal,session):
     '''
+    Get x velocity. Units are meters per second
 
     Parameters
     ----------
@@ -403,10 +323,9 @@ def get_dx(animal,session):
     nonneural = get_nonneural(animal,session)
     return nonneural.T[4]
 
-#@memoize
 def get_dy(animal,session):
     '''
-    y velocity. Units are meters per second
+    Get y velocity. Units are meters per second
 
     Parameters
     ----------
@@ -421,7 +340,6 @@ def get_dy(animal,session):
     nonneural = get_nonneural(animal,session)
     return nonneural.T[5]
 
-#@memoize
 def get_speed(animal,session):
     '''
     Speed computed from dx and dy.
@@ -442,7 +360,6 @@ def get_speed(animal,session):
     speed = (dx**2+dy**2)**0.5
     return speed
 
-#@memoize
 def get_type(animal,session):
     '''
     trial type (black right = 2, white left = 3)
@@ -460,7 +377,6 @@ def get_type(animal,session):
     nonneural = get_nonneural(animal,session)
     return nonneural.T[6]
 
-#@memoize
 def get_reward(animal,session):
     '''
     Timeseries indicating reward
@@ -480,7 +396,6 @@ def get_reward(animal,session):
     nonneural = get_nonneural(animal,session)
     return nonneural.T[7]
 
-#@memoize
 def get_nontrial(animal,session):
     '''
     Parameters
@@ -496,7 +411,6 @@ def get_nontrial(animal,session):
     nonneural = get_nonneural(animal,session)
     return nonneural.T[8]>0
 
-#@memoize
 def get_intrial(animal,session):
     '''
     Gets whether each time-point is in a trial or not. 
@@ -530,7 +444,6 @@ def get_cue(animal,session):
     nonneural = get_nonneural(animal,session)
     return nonneural.T[9]
 
-#@memoize
 def get_subject_ids():
     '''
     Report a list of subjects that have data
@@ -545,7 +458,6 @@ def get_subject_ids():
     Returns
     -------
     '''
-    #global path
     fs = os.listdir(path)
     alli = []
     for m in os.listdir(path):
@@ -561,7 +473,6 @@ def get_subject_ids():
     alli = sorted(list(np.unique(alli)))
     return alli
 
-#@memoize
 def get_session_ids(animal):
     '''
     Report a list of available sesson numbers for a given subject.
@@ -654,6 +565,15 @@ def get_unit_availability_map_by_days(animal):
     return unit_availability   
 
 def get_session_days(animal):
+    '''
+    Parameters
+    ----------
+    animal : int
+        Which subject ID to use
+        
+    Returns
+    -------
+    '''
     sessions = get_session_ids(animal)
     days=[]
     for i,s in enumerate(sessions):
@@ -666,7 +586,8 @@ def get_session_days(animal):
 
 def get_good_units_shared_across_sessions(animal):
     '''
-    This is cached on disk
+    This is cached on disk in the location `CACHEDIR`
+    (expects a global `CACHEDIR` variable to exist)
 
     Parameters
     ----------
@@ -690,7 +611,6 @@ def get_good_units_shared_across_sessions(animal):
         shared = array(sorted(list(set.intersection(*good.values()))))
         savemat(filename,{'good_units':shared})
         return shared
-
 
 @memoize
 def get_number_of_units(animal,session):
@@ -796,7 +716,6 @@ def get_smoothed_dFF(animal,session,unit,Fmin,Fmax,zeromean=True):
     release_files(clear_cache=True)
     return z
 
-#@memoize
 def get_good_dFF(animal,session):
     '''
     Parameters
@@ -892,7 +811,6 @@ def get_all_smoothed_logF(animal,session,Fmin,Fmax,**kwargs):
         y[:,ch] = get_smoothed_logF(animal,session,ch,Fmin,Fmax,**kwargs)
     return y
 
-#@memoize
 def get_deconvolved(animal,session):
     '''
     Parameters
@@ -908,7 +826,6 @@ def get_deconvolved(animal,session):
     hdfdata.close()
     return decon_Ca
 
-#@memoize
 def get_good_deconvolved(animal,session):
     '''
     Parameters
@@ -1068,7 +985,6 @@ def get_zscored_kinematics(animal,session):
     '''
     return zscore(get_kinematics(animal,session).T).T
 
-#@memoize
 def get_fa(animal,session,
            DECIMATE=10,
            LAGS=1,
@@ -1098,14 +1014,6 @@ def get_fa(animal,session,
         x = np.concatenate([x,b])
     X = x.T
 
-    '''
-    # Blank out bad areas?
-    intrial = get_intrial(animal,session)
-    labels = ppc_trial.get_contextual_types(animal,session)[intrial][::DECIMATE]
-    bad = labels<0
-    fa.fit(X[~bad,:])
-    '''
-
     if LAGS>1:
         # Expand X using time lags
         K = X.shape[1]
@@ -1131,7 +1039,6 @@ def get_fa(animal,session,
     F     = F[order,:]
     return X,Y,Sigma,F,lmbda,fa
 
-#@memoize
 def get_le(animal,session,
            use=None,
            NDIM=8,
@@ -1157,22 +1064,8 @@ def get_le(animal,session,
     X,Y,Sigma,F,lmbda,fa = get_fa(animal,session,use=use,**kwargs)
     # Laplacian eigenmap
     se = manifold.SpectralEmbedding(n_components=NDIM,n_neighbors=NNEIGHBOR)
-    '''
-    # Blank out bad areas?
-    intrial = get_intrial(animal,session)
-    labels = ppc_trial.get_contextual_types(animal,session)[intrial][::DECIMATE]
-    good   = labels>=0
-    Z = se.fit_transform(Y[good,:])
-    Z2 = np.zeros((Y.shape[0],NDIM))*np.nan
-    Z2[good,:] = Z;
-    Z = Z2;
-    '''
     Z = se.fit_transform(Y)
-
     return X,Y,Z,Sigma,F,lmbda,fa
-
-import neurotools.signal
-from neurotools.nlab import autocorrelation,sexp,zscore,minimize_retry
 
 def estimate_autocorrelation_decay(x,cutoff=0.2,doplot=True,lags=None):
     '''
@@ -1205,7 +1098,6 @@ def estimate_autocorrelation_decay(x,cutoff=0.2,doplot=True,lags=None):
         print('Suggest decimation by',interval)
         plot(decay,label='Autocorrelation')
         plot(predict,label='Model $\\tau=%0.1f$'%tau)
-        #axvline(tau,color=BLACK,label='Tau')
         axvline(interval,color=RUST,label='Cutoff')
         legend(); simpleaxis()
     return tau,interval
@@ -1468,8 +1360,6 @@ def get_consecutive_recordings(animal,
                %(a,b,b-a+1,len(common[a,b]))) 
          for a,b in valid_spans]
     return {k:sorted(list(common[k])) for k in map(tuple,valid_spans)}
-
-
 
 # This can be inferred from the data files but the mapping
 # between session #s and day #s is hard-coded here for laziness
