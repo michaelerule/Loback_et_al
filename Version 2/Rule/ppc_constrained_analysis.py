@@ -7,16 +7,15 @@ from __future__ import nested_scopes
 from __future__ import generators
 from __future__ import unicode_literals
 from __future__ import print_function
+
+"""
+Some subroutines for constrained analyses 
+"""
+
 import os,sys,traceback,h5py
-# Get PPC routines and neurotools;
-# Add your local paths to this list
-[sys.path.insert(0,os.path.abspath(os.path.expanduser(p))) for p in [
-    "../",
-    "../../"]]
 from ppc_analysis import *
 from numpy import concatenate as cat
 from neurotools.tools import find, amap
-
 import ppc_analysis
 
 def constrained_analysis_sweep(x,y,NGRID=20):

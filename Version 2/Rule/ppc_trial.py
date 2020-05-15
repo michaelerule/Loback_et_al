@@ -8,28 +8,24 @@ from __future__ import generators
 from __future__ import unicode_literals
 from __future__ import print_function
 
-from neurotools.nlab import *
+"""
+Extract information on trial structure from datasets
+"""
 
 import os,sys,traceback,h5py
-
-# helper functions for reading the HDF5 Matlab format
-from neurotools.hdfmat import printmatHDF5, hdf2dict, getHDF
-
-#import sklearn
-from sklearn.decomposition import FactorAnalysis
-
-# Linear system solvers (exact vs. least-squares)
-from scipy.linalg import solve,lstsq
 
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-matplotlib.rcParams['figure.dpi']=200
 
-from sklearn  import manifold
+from neurotools.nlab   import *
+from neurotools.hdfmat import printmatHDF5, hdf2dict, getHDF
 
+from sklearn               import manifold
+from sklearn.decomposition import FactorAnalysis
+from scipy.linalg          import solve,lstsq
 
-from ppc_util import *
+from ppc_util        import *
 from ppc_data_loader import *
 import ppc_data_loader
 
@@ -110,10 +106,6 @@ class Trial():
            s.append('(No previous trials)') 
         else:
             s.append('Previous trial: %d'%(self.previous.number))
-            #if recurse:
-            #    s.extend(['   %s'%s for s in self.previous.toStrings(False)])
-            #else:
-            #    s.append('...')
         return s
 
 

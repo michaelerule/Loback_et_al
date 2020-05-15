@@ -8,19 +8,19 @@ from __future__ import generators
 from __future__ import unicode_literals
 from __future__ import print_function
 
-from neurotools.nlab import *
+"""
+Plotting helpers
+"""
+
 import os,sys,traceback,h5py
-# helper functions for reading the HDF5 Matlab format
-#import sklearn
-from sklearn.decomposition import FactorAnalysis
-# Linear system solvers (exact vs. least-squares)
-from scipy.linalg import solve,lstsq
+
 import numpy as np
 import matplotlib
-
 import matplotlib.pyplot as plt
+from   sklearn.decomposition import FactorAnalysis
+from   scipy.linalg          import solve,lstsq
 
-matplotlib.rcParams['figure.dpi']=200
+from neurotools.nlab import *
 
 import ppc_data_loader
 import ppc_trial
@@ -156,43 +156,6 @@ def leplot(animal,session,
         colors = ctxt_colors[labels,:]
         names  = ['Previously went left','Previously went right']
                 
-    '''
-    CONTEXT_LABELS = { 
-         0: '?, cue:←, prev:←',
-         1: '↑, cue:←, prev:←',
-         2: '⇄, cue:←, prev:←',
-         3: '←, cue:←, prev:←',
-         4: '→, cue:←, prev:←',
-         5: '?, cue:←, prev:→',
-         6: '↑, cue:←, prev:→',
-         7: '⇄, cue:←, prev:→',
-         8: '←, cue:←, prev:→',
-         9: '→, cue:←, prev:→',
-        10: '?, cue:→, prev:←',
-        11: '↑, cue:→, prev:←',
-        12: '⇄, cue:→, prev:←',
-        13: '←, cue:→, prev:←',
-        14: '→, cue:→, prev:←',
-        15: '?, cue:→, prev:→',
-        16: '↑, cue:→, prev:→',
-        17: '⇄, cue:→, prev:→',
-        18: '←, cue:→, prev:→',
-        19: '→, cue:→, prev:→'}
-    '''
-    
-    '''
-    bad_dimensions = []    
-    for i,z in enumerate(Z.T):
-        z = z[np.isfinite(z)]
-        a,b = np.min(z),np.max(z)
-        m = (a+b)*0.5
-        x = np.mean(z<m)
-        if abs(x-0.5)>0.48:
-            bad_dimensions.append(i)
-    ok_dim = tuple(sorted(list(set(np.arange(NDIM))-set(bad_dimensions))))
-    Z = Z[:,ok_dim]
-    '''
-
     ok = colors[:,-1]!=0
     plot_pairs(Z[ok,:NSHOW],figure(figsize=(10*FIGSCALE,11*FIGSCALE),facecolor='w'),colors=colors[ok,:],s=s)
 
@@ -210,10 +173,6 @@ def le_contextual_colors(animal,session):
     context_labels = ppc_trial.Trial.CONTEXT_LABELS
     # Check that there are 12 prevailing labels
     cl  = np.concatenate([tr.context for tr in ppc_trial.get_trials_with_context(animal,session)])
-    #labels,cts  = np.unique(cl,return_counts=True)
-    #please_show = cts>(len(cl)//100)
-    #show_labels = sorted(labels[please_show])
-    #assert len(show_labels)==12
     
     show_labels = array([1,2,3,6,7,8,11,12,14,16,17,19])
 
@@ -244,41 +203,6 @@ def le_contextual_colors(animal,session):
     newcolors = [OCHRE, CHARTREUSE, MAUVE, INDEGO, RUST, CRIMSON, AZURE, TURQUOISE]
     return ctxt_colors[color_idxs],newcolors,newnames
 
-
-# Ad hoc merging some states for clarity
-'''
-	 1: ↑, cue:←, prev:← (color: #eea300) 
-	 2: ⇄, cue:←, prev:← (color: #eb7a59)
-	 3: ←, cue:←, prev:← (color: #b41d4d)
-	 6: ↑, cue:←, prev:→ (color: #b59f1a)
-	 7: ⇄, cue:←, prev:→ (color: #eb7a59)
-	 8: ←, cue:←, prev:→ (color: #b41d4d)
-	11: ↑, cue:→, prev:← (color: #8d5ccd)
-	12: ⇄, cue:→, prev:← (color: #5aa0df)
-	14: →, cue:→, prev:← (color: #00bac9)
-	16: ↑, cue:→, prev:→ (color: #606ec3)
-	17: ⇄, cue:→, prev:→ (color: #5aa0df)
-	19: →, cue:→, prev:→ (color: #00bac9)
-↶ ↝ ↜ ↷↺↻↷
-
-	 1: ↑, cue:←, prev:← (color: #eea300) 0
-	 2: ⇄, cue:←, prev:← (color: #eb7a59) 1
-	 3: ←, cue:←, prev:← (color: #b41d4d) 2
-	 6: ↑, cue:←, prev:→ (color: #b59f1a) 3 
-	 7: ⇄, cue:←, prev:→ (color: #eb7a59) 1
-	 8: ←, cue:←, prev:→ (color: #b41d4d) 2
-	11: ↑, cue:→, prev:← (color: #8d5ccd) 4
-	12: ⇄, cue:→, prev:← (color: #5aa0df) 5
-	14: →, cue:→, prev:← (color: #00bac9) 6
-	16: ↑, cue:→, prev:→ (color: #606ec3) 7 
-	17: ⇄, cue:→, prev:→ (color: #5aa0df) 5
-	19: →, cue:→, prev:→ (color: #00bac9) 6
-
-(←)↑(←) ↰ ← (→)↑(←) (←)↑(→) ↱ → (←)↑(←)
-'''
-
-
-
 def xy_scalebars(dx=None,dy=None,xunits='',yunits='',xoffset=0,yoffset=0,xpadp=9,ypadp=12,
                  fontsize=12,
                  center=False,
@@ -308,8 +232,6 @@ def xy_scalebars(dx=None,dy=None,xunits='',yunits='',xoffset=0,yoffset=0,xpadp=9
         plt.plot([x,x+dx],[y,y],color=color,**kwargs)
         plt.plot([x,x],[y,y+dy],color=color,**kwargs)
     else:
-        #plt.arrow(x,y,dx,0,head_width=hwx,head_length=hhx,color=color,clip_on=False,**kwargs)
-        #plt.arrow(x,y,0,dy,head_width=hwy,head_length=hhy,color=color,clip_on=False,**kwargs)
         w0 = array([x,y])
         wx = w0 + [dx,0]
         wy = w0 + [0,dy]

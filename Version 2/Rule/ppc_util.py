@@ -8,17 +8,15 @@ from __future__ import generators
 from __future__ import unicode_literals
 from __future__ import print_function
 
-from neurotools.nlab import *
-import os,sys,traceback,h5py
-# helper functions for reading the HDF5 Matlab format
-#import sklearn
-from sklearn.decomposition import FactorAnalysis
-# Linear system solvers (exact vs. least-squares)
-from scipy.linalg import *
-import numpy as np
+"""
+Various useful functions
+"""
 
-from sklearn.decomposition import FactorAnalysis
-import warnings
+import os,sys,traceback,h5py,warnings
+import numpy as np
+from   scipy.linalg          import *
+from   sklearn.decomposition import FactorAnalysis
+from   neurotools.nlab       import *
 
 def get_factor_analysis(X,NFACTORS):
     '''
@@ -31,10 +29,6 @@ def get_factor_analysis(X,NFACTORS):
     F     = fa.components_
     # Get eigenvalues/loadings
     lmbda = diag(F.dot(F.T))
-    # Sort by importance
-    #order = argsort(abs(lmbda))[::-1]
-    #lmbda = lmbda[order]
-    #F     = F[order,:]
     return Y,Sigma,F,lmbda,fa
 
 def project_factors(X,F,S):
@@ -104,14 +98,8 @@ def factor_predict(fa,predict_from,predict_to,X):
     Xthat   = Ft.T.dot(latents)
 
     # Predict variance
-    #iFf = numpy.linalg.pinv(Ff)
-    #Sf  = np.diag(S[predict_from])
     St  = np.diag(S[predict_to])
-    #M   = lstsq(Ff,Ft)[0]
-    #Xtc = M.T.dot(Sf).dot(M)+St
-
     Xtc = Ft.T.dot(scipy.linalg.lstsq(pPx,Ft)[0]) + St
-
     return Xthat,Xtc
 
 def deep_tuple(x):
@@ -209,7 +197,6 @@ def factors_tree(F,labels=None):
         p1 = scipy.linalg.pinv(F)
         J0 = np.abs(p1.dot(p1.T))
         a,b = PSDpeak(J0)
-        #print(a,b)
         F = collapse(F,a,b)
         node = [(tree[a],tree[b])]
         del tree[a]
@@ -325,7 +312,6 @@ def polar_error_degrees(x,xh):
     e = abs(x-xh)
     e[e>180] = 360-e[e>180]
     return mean(abs(e)**2)**.5, mean(abs(e))
-
     
 def block_shuffle(x,BLOCKSIZE=None):
     '''

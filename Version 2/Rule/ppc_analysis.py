@@ -8,34 +8,22 @@ from __future__ import generators
 from __future__ import unicode_literals
 from __future__ import print_function
 
+"""
+Some subroutines for LMS and concatnated analyses 
+"""
+
 import os,sys,traceback,h5py
-sys.path.insert(0,os.path.abspath('./'))
-
-from neurotools.jobs.initialize_system_cache import initialize_caches,cache_test
-
-PYCACHEDIR = os.path.abspath('./')
-CACHENAME  = 'PPC_cache'
-NO_CACHING = False
-if not NO_CACHING:
-    from neurotools.tools import ensure_dir
-    ensure_dir(PYCACHEDIR+os.sep+CACHENAME)
-    initialize_caches(
-        level1  = PYCACHEDIR,
-        force   = False,
-        verbose = True,
-        CACHE_IDENTIFIER = CACHENAME)
 
 from neurotools.nlab import *
+from neurotools.hdfmat import printmatHDF5, hdf2dict, getHDF
+
 import ppc_data_loader
 from ppc_data_loader import *
 from ppc_trial       import *
 from ppc_plot        import *
-from neurotools.hdfmat import printmatHDF5, hdf2dict, getHDF
-from itertools import product
+from itertools       import product
 np.seterr(all='raise');
 from numpy import concatenate as cat
-
-print('Defined subroutines')
 
 kininfo = {
     0:{'name':'X position'    ,'units':'m'  ,'get':get_x},

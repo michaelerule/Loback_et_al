@@ -8,6 +8,10 @@ from __future__ import generators
 from __future__ import unicode_literals
 from __future__ import print_function
 
+"""
+Load and process the HDF5 formatted datasets
+"""
+
 import os,sys,traceback,h5py
 
 # Get numpy, matplotlib
@@ -1202,7 +1206,6 @@ def get_spatial_bins(animal,session,
                 %(p_names[pr],x_centers[bx-1],y_centers[by-1])
         bin_info[i] = ((pr,bx,by),(npr,nbx,nby),label)
         bin_ids[np.all(bin_tuples==bin,axis=1)]=i
-        #print('bin %d is %s'%(i,label))
     return bin_ids,bin_info
 
 def get_context_bins(animal,session,
@@ -1282,10 +1285,7 @@ def get_context_bins(animal,session,
         label = 'prev=%s cue=%s x=%0.2f y=%0.2f'%(pn,cn,xn,yn)
         bin_info[i] = ((bp,bc,bx,by),(pn,cn,xn,yn),label)
         bin_ids[np.all(bin_tuples==bin,axis=1)]=i
-        #print('bin %d is %s'%(i,label))
     return bin_ids,bin_info
-
-
 
 def get_consecutive_recordings(animal,
                                MINNEURONS=200,
