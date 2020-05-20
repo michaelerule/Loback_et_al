@@ -1,6 +1,6 @@
 # Stable Task Information from an Unstable Neural Population
 
-Source code files for the paper "Stable Task Information from an Unstable Neural Population". 
+Source code files for the paper ["Stable Task Information from an Unstable Neural Population". ](https://www.biorxiv.org/content/10.1101/796334v2)
 
 Datasets from [Driscoll et al. 2017](https://www.sciencedirect.com/science/article/pii/S0092867417308280) are needed to run these analyses. Contact LND or CDH to obtain the datasets necessary to reproduce these analyses.
 
