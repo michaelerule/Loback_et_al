@@ -2,7 +2,7 @@
 
 Source code files for the paper ["Stable Task Information from an Unstable Neural Population". ](https://www.biorxiv.org/content/10.1101/796334v2)
 
-Datasets from [Driscoll et al. 2017](https://www.sciencedirect.com/science/article/pii/S0092867417308280) are needed to run these analyses. Contact LND or CDH to obtain the datasets necessary to reproduce these analyses.
+Datasets from [Driscoll et al. 2017](https://www.sciencedirect.com/science/article/pii/S0092867417308280) are needed to run these analyses. Contact LND or CDH to obtain the datasets necessary to reproduce these analyses. These datasets are also available from the [Dryad repository](https://doi.org/10.5061/dryad.gqnk98sjq).
 
 `Version 1/Loback` contains ARL's Matlab source code. This was used to render Figure 2, as well as in prelimenary analyses for Figures 3 and 4. There are also some plotting scipts in Python. 
 
