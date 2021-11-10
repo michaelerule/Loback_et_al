@@ -82,7 +82,6 @@ def get_file(animal,session):
     '''
     return 'm%02d_s%02d.mat'%(animal,session)
 
-12345678901234567890123456789012345678901234567890123456789012345678901234567890
 def get_data(animal,session):
     '''
     Returns an `h5py.File` instance for  the given animal and session. This
