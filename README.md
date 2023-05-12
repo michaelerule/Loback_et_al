@@ -2,6 +2,8 @@
 
 Rule, M. E., Loback, A. R., Raman, D. V., Driscoll, L. N., Harvey, C. D., & O'Leary, T. (2020). Stable task information from an unstable neural population. Elife, 9, e51121. [doi: https://doi.org/10.7554/eLife.51121](https://doi.org/10.7554/eLife.51121)
 
+![](https://github.com/michaelerule/stable-task-information/blob/master/lax%2051121_elife-51121-fig4-v2.tif.png)
+
 ### Abstract
 
 Over days and weeks, neural activity representing an animal’s position and movement in sensorimotor cortex has been found to continually reconfigure or ‘drift’ during repeated trials of learned tasks, with no obvious change in behavior. This challenges classical theories, which assume stable engrams underlie stable behavior. However, it is not known whether this drift occurs systematically, allowing downstream circuits to extract consistent information. Analyzing long-term calcium imaging recordings from posterior parietal cortex in mice (Mus musculus), we show that drift is systematically constrained far above chance, facilitating a linear weighted readout of behavioral variables. However, a significant component of drift continually degrades a fixed readout, implying that drift is not confined to a null coding space. We calculate the amount of plasticity required to compensate drift independently of any learning rule, and find that this is within physiologically achievable bounds. We demonstrate that a simple, biologically plausible local learning rule can achieve these bounds, accurately decoding behavior over many days.
